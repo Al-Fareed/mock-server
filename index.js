@@ -3,9 +3,12 @@ const app = express();
 
 app.use(express.json());
 
-app.post("/update", (req, res) => {
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "health check, Good" });
+});
+app.post("/webhook/activate", (req, res) => {
     console.log("Request Body:", JSON.stringify(req.body,null,2)); 
-    res.json({ status: "updated" });
+    res.status(200).json({ status: "updated" });
 });
 
 const PORT = 3000;
