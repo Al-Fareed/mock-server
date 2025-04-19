@@ -24,6 +24,6 @@ app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
 
-mongoose.connect(process.env.DATABASE_URL).then(() => {
-    console.log("DB CONNECTED");
-});
+// mongoose.connect(process.env.DATABASE_URL).then(() => {
+//     console.log("DB CONNECTED");
+// });

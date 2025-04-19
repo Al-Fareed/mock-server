@@ -1,11 +1,12 @@
-const { request, response } = require("express");
-const Invoice = require('../models.js/edgSchema');
+// const Invoice = require('../models.js/edgSchema');
 const { faker } = require("@faker-js/faker");
+const supabase = require('../shared/db/config')
 const createInvoice = async (request, response) => {
     try {
         const { amount } = request.body;
-        console.log("Body", amount);
-        const invoice = new Invoice({
+        console.log("Invoice of amount = ", amount, " is generated");
+
+        const { error } = await supabase.from("invoices").insert({
             invoice_id: faker.string.numeric(18),
             title: "",
             amount: amount,
@@ -35,11 +36,9 @@ const createInvoice = async (request, response) => {
                 }
             ]
         });
-
-        const savedInvoice = await invoice.save();
+        // const savedInvoice = await invoice.save();
         return response.status(201).json({
-            message: "Created Sucessfully",
-            body: savedInvoice
+            message: "Created Invoice Sucessfully",
         })
     } catch (error) {
         console.error('Error creating invoice:', error.message);
@@ -51,15 +50,35 @@ const createInvoice = async (request, response) => {
 }
 const updateInvoice = async (request, response) => {
     try {
+        const { invoice_id, amount, balance } = request.body;
+        const { data: invoices, error } = await supabase
+            .from('invoices')
+            .update({ amount: amount, balance: balance })
+            .eq('invoice_id', invoice_id)
+            .select()
 
+        if(error){
+            return response.status(500).json({
+                message: 'Failed to update invoice = ',
+                error: error
+            });
+        }
+        return response.status(200).json({
+            status: 200,
+            body: invoices
+        });
     } catch (error) {
-
+        return response.status(500).json({
+            message: 'Failed to update invoice',
+            error: error
+        });
     }
 }
 const listInvoices = async (request, response) => {
     try {
-        const invoices = await Invoice.find();
-
+        let { data: invoices, error } = await supabase
+            .from('invoices')
+            .select('*')
         return response.status(200).json({
             status: 200,
             body: invoices
@@ -74,16 +93,28 @@ const listInvoices = async (request, response) => {
 }
 const deleteInvoice = async (request, response) => {
     try {
-        const {invoice_id} = request.body;
-        const result = await Invoice.deleteOne({ invoice_id });
+        const { invoice_id } = request.body;
+        const { error } = await supabase
+            .from('invoices')
+            .delete()
+            .eq('invoice_id', invoice_id)
 
-        if (result.deletedCount === 0) {
-            return response.status(404).json({ message: 'Invoice not found' });
+        if (error) {
+            return response.status(404)
+                .json({
+                    message: error
+                });
         }
 
-        return response.status(200).json({ message: 'Invoice deleted successfully' });
+        return response.status(200)
+            .json({
+                message: 'Invoice deleted successfully'
+            });
     } catch (error) {
-        return response.status(500).json({ message: 'Error deleting invoice', error: error.message });
+        return response.status(500)
+            .json({
+                message: 'Error deleting invoice', error: error.message
+            });
     }
 
 }
